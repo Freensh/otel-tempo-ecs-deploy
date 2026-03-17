@@ -1,0 +1,43 @@
+name: OpenTelemetry and Tempo Deploy
+
+on:
+  workflow_run:
+    workflows: ["Mirror Docker images to ECR"]
+    types:
+      - completed
+
+jobs:
+
+  terraform:
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Environments/Dev
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve

@@ -1,0 +1,56 @@
+name: Mirror Docker images to ECR
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+jobs:
+    mirror-images:
+    
+        name: Mirror ${{ matrix.repo }} image
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                include:
+                -   source: dhi.io/tempo:latest
+                    repo: freenshdev-tempo-repo
+                    tag: 2.4.1
+
+                -   source: dhi.io/opentelemetry-collector:latest
+                    repo: freenshdev-otel-repo
+                    tag: 0.91.0
+
+        steps:
+
+        -   name: Checkout repository
+            uses: actions/checkout@v4
+
+        -   name: Configure AWS credentials
+            uses: aws-actions/configure-aws-credentials@v4
+            with:
+                aws-region: ${{ secrets.AWS_REGION }}
+                role-to-assume: ${{ secrets.AWS_ROLE }}
+
+        -   name: Login to ECR
+            uses: aws-actions/amazon-ecr-login@v2
+
+        -   name: Pull image from Docker Hub
+            run: |
+                docker pull ${{ matrix.source }}
+
+        -   name: Tag image for ECR
+            run: |
+                docker tag ${{ matrix.source }} \
+                ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ matrix.repo }}:${{ matrix.tag }}
+
+        -   name: Push image to ECR
+            run: |
+                docker push \
+                ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ matrix.repo }}:${{ matrix.tag }}
+
+        -   name: Output pushed image
+            run: |
+                echo "Image pushed:"
+                echo "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ matrix.repo }}:${{ matrix.tag }}"
