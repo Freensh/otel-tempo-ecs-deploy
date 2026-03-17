@@ -20,7 +20,7 @@ jobs:
                     repo: freenshdev-tempo-repo
                     tag: 2.4.1
 
-                -   source: docker pull otel/opentelemetry-collector:0.148.0-nightly.ebba943
+                -   source: otel/opentelemetry-collector:0.148.0-nightly.ebba943
                     repo: freenshdev-otel-repo
                     tag: 0.91.0
 
