@@ -10,7 +10,9 @@ jobs:
     
         name: Mirror ${{ matrix.repo }} image
         runs-on: ubuntu-latest
-
+        permissions:
+            id-token: write
+            contents: read
         strategy:
             matrix:
                 include:
